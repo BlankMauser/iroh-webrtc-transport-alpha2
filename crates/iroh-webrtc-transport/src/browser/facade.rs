@@ -407,6 +407,26 @@ impl BrowserWebRtcConnection {
         })
     }
 
+    /// Sends one unreliable, unordered Iroh application datagram.
+    ///
+    /// The bytes are handed to the Iroh connection unchanged. Callers should keep the
+    /// payload within the connection's current datagram limit and provide any application
+    /// redundancy they need.
+    pub async fn send_datagram(&self, bytes: &[u8]) -> Result<(), JsValue> {
+        self.node
+            .runtime
+            .datagram_send_facade(&self.connection_key, bytes)
+            .await
+    }
+
+    /// Receives the next Iroh application datagram without reordering or retransmission.
+    pub async fn read_datagram(&self) -> Result<Vec<u8>, JsValue> {
+        self.node
+            .runtime
+            .datagram_receive_facade(&self.connection_key)
+            .await
+    }
+
     pub async fn close(&self, reason: &str) -> Result<(), JsValue> {
         self.node
             .runtime
@@ -546,6 +566,18 @@ impl BrowserRuntime {
         connection_key: &str,
     ) -> Result<BrowserStreamAcceptInfo, JsValue> {
         self.accept_bi(connection_key).await
+    }
+
+    async fn datagram_send_facade(
+        &self,
+        connection_key: &str,
+        bytes: &[u8],
+    ) -> Result<(), JsValue> {
+        self.send_datagram(connection_key, bytes)
+    }
+
+    async fn datagram_receive_facade(&self, connection_key: &str) -> Result<Vec<u8>, JsValue> {
+        self.receive_datagram(connection_key).await
     }
 
     async fn stream_send_chunk_facade(

@@ -5,6 +5,7 @@
 
 use std::time::Duration;
 
+use bytes::Bytes;
 use iroh::{Endpoint, EndpointAddr, RelayMode, SecretKey, Watcher, endpoint::presets};
 use iroh_webrtc_transport::{
     NativeWebRtcIrohNode, WebRtcDialOptions, WebRtcNodeConfig, config::WebRtcSessionConfig,
@@ -14,6 +15,7 @@ use n0_future::{task, time::timeout as future_timeout};
 const ALPN: &[u8] = b"noop/iroh-webrtc-transport/native-facade/4";
 const PING: &[u8] = b"ping";
 const PONG: &[u8] = b"pong";
+const DATAGRAM: &[u8] = b"unreliable-application-datagram";
 
 #[test]
 fn native_facade_type_is_public_importable() {
@@ -77,6 +79,87 @@ async fn native_facade_dials_and_accepts_ping_pong_over_webrtc() -> anyhow::Resu
     connection.close(0u32.into(), b"native facade test complete");
     timeout("join accept task", accept).await??;
     client.close().await;
+    server.close().await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn native_facade_round_trips_application_datagram_over_webrtc() -> anyhow::Result<()> {
+    let client = native_node(SecretKey::generate()).await?;
+    let server = native_node(SecretKey::generate()).await?;
+    let server_addr = endpoint_addr(&server).await?;
+
+    let accept_server = server.clone();
+    let accept = task::spawn(async move {
+        let connection = timeout("accept facade connection", accept_server.accept(ALPN)).await?;
+        let datagram = timeout("read application datagram", connection.read_datagram()).await?;
+        assert_eq!(datagram.as_ref(), DATAGRAM);
+        anyhow::Ok(())
+    });
+
+    let connection = timeout(
+        "dial facade connection",
+        client.dial(server_addr, ALPN, WebRtcDialOptions::webrtc_only()),
+    )
+    .await?;
+    connection.send_datagram(Bytes::from_static(DATAGRAM))?;
+
+    timeout("join datagram accept task", accept).await??;
+    connection.close(0u32.into(), b"native datagram test complete");
+    client.close().await;
+    server.close().await;
+    Ok(())
+}
+
+#[tokio::test]
+async fn native_facade_accepts_two_concurrent_webrtc_sessions() -> anyhow::Result<()> {
+    let client_one = native_node(SecretKey::generate()).await?;
+    let client_two = native_node(SecretKey::generate()).await?;
+    let server = native_node(SecretKey::generate()).await?;
+    let server_addr = endpoint_addr(&server).await?;
+
+    let accept_server = server.clone();
+    let accept = task::spawn(async move {
+        let first = timeout("accept first facade connection", accept_server.accept(ALPN));
+        let second = timeout(
+            "accept second facade connection",
+            accept_server.accept(ALPN),
+        );
+        let (first, second) = tokio::join!(first, second);
+        let first = first?;
+        let second = second?;
+        anyhow::Ok((first, second))
+    });
+
+    let first_dial = client_one.dial(server_addr.clone(), ALPN, WebRtcDialOptions::webrtc_only());
+    let second_dial = client_two.dial(server_addr, ALPN, WebRtcDialOptions::webrtc_only());
+    let (first, second) = tokio::join!(
+        timeout("dial first facade connection", first_dial),
+        timeout("dial second facade connection", second_dial),
+    );
+    let first = first?;
+    let second = second?;
+    first.send_datagram(Bytes::from_static(DATAGRAM))?;
+    second.send_datagram(Bytes::from_static(DATAGRAM))?;
+
+    let (first_server, second_server) = timeout("join concurrent accept task", accept).await??;
+    let first_datagram = timeout(
+        "read first concurrent datagram",
+        first_server.read_datagram(),
+    )
+    .await?;
+    let second_datagram = timeout(
+        "read second concurrent datagram",
+        second_server.read_datagram(),
+    )
+    .await?;
+    assert_eq!(first_datagram.as_ref(), DATAGRAM);
+    assert_eq!(second_datagram.as_ref(), DATAGRAM);
+
+    first.close(0u32.into(), b"first concurrent test complete");
+    second.close(0u32.into(), b"second concurrent test complete");
+    client_one.close().await;
+    client_two.close().await;
     server.close().await;
     Ok(())
 }
