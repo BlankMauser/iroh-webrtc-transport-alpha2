@@ -43,10 +43,10 @@ impl Drop for PendingDialCleanup {
             .pending_dials
             .borrow_mut()
             .remove(&self.session_key);
-        self.bootstrap
-            .signal_senders
-            .borrow_mut()
-            .remove(&self.session_key);
+        // A completed application dial still needs this bootstrap writer for
+        // its terminal WebRTC signal. The browser connection later closes or
+        // reconnects through the same session; dropping it here made every
+        // successful dial lose its close path.
     }
 }
 

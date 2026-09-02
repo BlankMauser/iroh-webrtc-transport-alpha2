@@ -231,6 +231,23 @@ impl BrowserRuntime {
             .map_err(|err| runtime_error_to_js(err))
     }
 
+    pub(crate) fn send_datagram(&self, connection_key: &str, bytes: &[u8]) -> Result<(), JsValue> {
+        self.core
+            .open_node()
+            .map_err(|err| runtime_error_to_js(err))?
+            .send_datagram(parse_connection_key(connection_key)?, bytes)
+            .map_err(|err| runtime_error_to_js(err))
+    }
+
+    pub(crate) async fn receive_datagram(&self, connection_key: &str) -> Result<Vec<u8>, JsValue> {
+        self.core
+            .open_node()
+            .map_err(|err| runtime_error_to_js(err))?
+            .receive_datagram(parse_connection_key(connection_key)?)
+            .await
+            .map_err(|err| runtime_error_to_js(err))
+    }
+
     pub(crate) async fn send_stream_chunk(
         &self,
         stream_key: &str,

@@ -1,6 +1,39 @@
 use super::*;
 
 impl BrowserRuntimeNode {
+    pub(in crate::browser_runtime) fn send_datagram(
+        &self,
+        connection_key: BrowserConnectionKey,
+        bytes: &[u8],
+    ) -> BrowserRuntimeResult<()> {
+        let connection = self.iroh_connection(connection_key)?;
+        connection
+            .send_datagram(bytes::Bytes::copy_from_slice(bytes))
+            .map_err(|err| {
+                BrowserRuntimeError::new(
+                    BrowserRuntimeErrorCode::WebRtcFailed,
+                    format!("failed to send Iroh application datagram: {err}"),
+                )
+            })
+    }
+
+    pub(in crate::browser_runtime) async fn receive_datagram(
+        &self,
+        connection_key: BrowserConnectionKey,
+    ) -> BrowserRuntimeResult<Vec<u8>> {
+        let connection = self.iroh_connection(connection_key)?;
+        connection
+            .read_datagram()
+            .await
+            .map(|bytes| bytes.to_vec())
+            .map_err(|err| {
+                BrowserRuntimeError::new(
+                    BrowserRuntimeErrorCode::WebRtcFailed,
+                    format!("failed to receive Iroh application datagram: {err}"),
+                )
+            })
+    }
+
     pub(in crate::browser_runtime) async fn open_bi(
         &self,
         connection_key: BrowserConnectionKey,
