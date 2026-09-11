@@ -227,6 +227,21 @@ impl BrowserWebRtcNode {
         alpn: &[u8],
         options: BrowserDialOptions,
     ) -> Result<BrowserWebRtcConnection, JsValue> {
+        self.dial_addr(parse_endpoint_addr(remote_endpoint)?, alpn, options)
+            .await
+    }
+
+    /// Dials using an endpoint identity and known bootstrap routing hints.
+    ///
+    /// For example, a room invite can carry the host's current relay URL so a
+    /// browser need not first discover it from the endpoint ID. Hints do not
+    /// replace Iroh's endpoint authentication or change transport preference.
+    pub async fn dial_addr(
+        &self,
+        remote_endpoint: EndpointAddr,
+        alpn: &[u8],
+        options: BrowserDialOptions,
+    ) -> Result<BrowserWebRtcConnection, JsValue> {
         let result = self
             .inner
             .runtime
@@ -499,12 +514,12 @@ impl BrowserRuntime {
 
     async fn dial_facade(
         &self,
-        remote_endpoint: &str,
+        remote_endpoint: EndpointAddr,
         alpn: &[u8],
         options: BrowserDialOptions,
     ) -> Result<BrowserConnectionInfo, JsValue> {
         self.dial(
-            parse_endpoint_addr(remote_endpoint)?,
+            remote_endpoint,
             alpn_string(alpn),
             options.transport_preference.as_intent(),
         )

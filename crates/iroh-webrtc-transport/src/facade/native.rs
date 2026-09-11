@@ -645,10 +645,21 @@ struct NativeBootstrapHandler {
 
 impl ProtocolHandler for NativeBootstrapHandler {
     async fn accept(&self, connection: Connection) -> std::result::Result<(), AcceptError> {
+        // Keep the bootstrap alive until the dialer has consumed our final ICE
+        // signals and dropped its connection. Finishing a stream alone does not
+        // prevent last-handle connection closure from abandoning unread data.
+        let keepalive = connection.clone();
         self.node
             .handle_bootstrap_connection(connection)
             .await
-            .map_err(|err| AcceptError::from_boxed(err.into()))
+            .map_err(|err| AcceptError::from_boxed(err.into()))?;
+        // A peer that retains its bootstrap must not retain this task forever.
+        let _ = tokio::time::timeout(
+            crate::core::bootstrap::DEFAULT_BOOTSTRAP_OPERATION_TIMEOUT,
+            keepalive.closed(),
+        )
+        .await;
+        Ok(())
     }
 }
 
