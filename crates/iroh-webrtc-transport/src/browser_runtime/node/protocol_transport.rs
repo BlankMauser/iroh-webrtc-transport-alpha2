@@ -79,7 +79,7 @@ impl EndpointHooks for BrowserProtocolTransportHook {
 
     async fn after_handshake<'a>(
         &'a self,
-        conn: &'a iroh::endpoint::ConnectionInfo,
+        conn: &'a iroh::endpoint::Connection,
     ) -> AfterHandshakeOutcome {
         let alpn = String::from_utf8_lossy(conn.alpn()).into_owned();
         let Some(inner) = self.inner.upgrade() else {
@@ -163,8 +163,9 @@ fn endpoint_addr_has_webrtc_session(remote_addr: &EndpointAddr) -> bool {
     })
 }
 
-fn selected_path_is_webrtc_session(conn: &iroh::endpoint::ConnectionInfo) -> bool {
-    let Some(path) = conn.selected_path() else {
+fn selected_path_is_webrtc_session(conn: &iroh::endpoint::Connection) -> bool {
+    let paths = conn.paths();
+    let Some(path) = paths.iter().find(|path| path.is_selected()) else {
         return false;
     };
     let TransportAddr::Custom(custom_addr) = path.remote_addr() else {

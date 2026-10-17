@@ -10,8 +10,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 console_error_panic_hook = "0.1"
 bytes = { version = "1", features = ["serde"] }
-iroh = { version = "0.98", default-features = false }
-iroh-gossip = { version = "0.98", default-features = false, features = ["net"] }
+iroh = { version = "1.3.0", default-features = false }
+iroh-gossip = { version = "0.101", default-features = false, features = ["net"] }
 iroh-webrtc-transport = { path = "../../crates/iroh-webrtc-transport", default-features = false, features = ["browser"] }
 n0-future = "0.2"
 serde = { version = "1", features = ["derive"] }

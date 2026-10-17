@@ -5,7 +5,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use iroh::endpoint::transports::{Addr, CustomEndpoint, CustomSender};
+use iroh::endpoint::transports::{CustomEndpoint, CustomSender, RecvInfo};
 use iroh_base::CustomAddr;
 
 use crate::core::{hub::SessionHub, sender::WebRtcSender};
@@ -74,7 +74,7 @@ impl CustomEndpoint for WebRtcEndpoint {
         cx: &mut Context,
         bufs: &mut [io::IoSliceMut<'_>],
         metas: &mut [noq_udp::RecvMeta],
-        source_addrs: &mut [Addr],
+        source_addrs: &mut [RecvInfo],
     ) -> Poll<io::Result<usize>> {
         debug_assert_eq!(bufs.len(), metas.len());
         debug_assert_eq!(bufs.len(), source_addrs.len());
@@ -143,7 +143,7 @@ impl CustomEndpoint for WebRtcEndpoint {
                     meta.len = payload_len;
                     meta.stride = stride;
                     metas[count] = meta;
-                    source_addrs[count] = Addr::Custom(pending.packet.source);
+                    source_addrs[count] = RecvInfo::new(pending.packet.source, None);
                     self.hub.record_endpoint_delivery(
                         payload_len,
                         payload_len.div_ceil(stride),
@@ -182,7 +182,7 @@ impl CustomEndpoint for WebRtcEndpoint {
             meta.len = segment_len;
             meta.stride = segment_len;
             metas[count] = meta;
-            source_addrs[count] = Addr::Custom(pending.packet.source.clone());
+            source_addrs[count] = RecvInfo::new(pending.packet.source.clone(), None);
             self.hub
                 .record_endpoint_delivery(segment_len, 1, segment_len);
             tracing::trace!(
