@@ -1,0 +1,35 @@
+crates/iroh-webrtc-transport/Cargo.toml
+  s_f4407b4c424f38::t_0c936ebf937d46 26-27,29-30
+crates/iroh-webrtc-transport/src/browser_runtime/node/protocol_transport.rs
+  s_f4407b4c424f38::t_0c936ebf937d46 82,166-168
+README.md
+  s_f4407b4c424f38::t_0c936ebf937d46 10-22
+crates/iroh-webrtc-transport/src/browser_runtime/node.rs
+  s_f4407b4c424f38::t_0c936ebf937d46 197-198,252,261-269,277
+crates/iroh-webrtc-transport/src/core/sender.rs
+  s_f4407b4c424f38::t_0c936ebf937d46 79
+examples/rust-browser-chat-room/Cargo.toml
+  s_f4407b4c424f38::t_0c936ebf937d46 13-14
+examples/rust-browser-ping-pong/Cargo.toml
+  s_f4407b4c424f38::t_0c936ebf937d46 12
+crates/iroh-webrtc-transport/src/core/endpoint.rs
+  s_f4407b4c424f38::t_0c936ebf937d46 8,77,146,185
+CHANGELOG.md
+  s_f4407b4c424f38::t_0c936ebf937d46 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b553d989c2fd6e30279a536c38e3bb3d5af68f3f",
+  "prompts": {},
+  "sessions": {
+    "s_f4407b4c424f38": {
+      "agent_id": {
+        "tool": "track-iroh-migrate",
+        "id": "pi-pocket-track-iroh-migrate",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "BlankMauser <thomasluvan@gmail.com>"
+    }
+  }
+}
