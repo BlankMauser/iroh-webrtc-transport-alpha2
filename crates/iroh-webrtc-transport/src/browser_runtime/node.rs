@@ -194,7 +194,8 @@ fn trace_iroh_connection_paths(
     connection_key: Option<u64>,
     connection: &Connection,
 ) {
-    let paths = connection.paths().into_iter().collect::<Vec<_>>();
+    let path_list = connection.paths();
+    let paths = path_list.iter().collect::<Vec<_>>();
     let path_count = paths.len();
     let selected_paths = paths
         .iter()
@@ -248,7 +249,7 @@ fn should_debug_path_snapshot(label: &str) -> bool {
     )
 }
 
-fn describe_iroh_path(connection: &Connection, path: &iroh::endpoint::PathInfo) -> String {
+fn describe_iroh_path(connection: &Connection, path: &iroh::endpoint::Path<'_>) -> String {
     let kind = if path.is_relay() {
         "relay"
     } else if path.is_ip() {
@@ -257,15 +258,15 @@ fn describe_iroh_path(connection: &Connection, path: &iroh::endpoint::PathInfo) 
         "custom"
     };
     let stats = path.stats();
-    let rtt_ms = stats.map(|stats| stats.rtt.as_millis());
-    let path_cwnd = stats.map(|stats| stats.cwnd);
-    let current_mtu = stats.map(|stats| stats.current_mtu);
-    let lost_packets = stats.map(|stats| stats.lost_packets);
-    let lost_bytes = stats.map(|stats| stats.lost_bytes);
-    let tx_datagrams = stats.map(|stats| stats.udp_tx.datagrams);
-    let tx_bytes = stats.map(|stats| stats.udp_tx.bytes);
-    let rx_datagrams = stats.map(|stats| stats.udp_rx.datagrams);
-    let rx_bytes = stats.map(|stats| stats.udp_rx.bytes);
+    let rtt_ms = stats.rtt.as_millis();
+    let path_cwnd = stats.cwnd;
+    let current_mtu = stats.current_mtu;
+    let lost_packets = stats.lost_packets;
+    let lost_bytes = stats.lost_bytes;
+    let tx_datagrams = stats.udp_tx.datagrams;
+    let tx_bytes = stats.udp_tx.bytes;
+    let rx_datagrams = stats.udp_rx.datagrams;
+    let rx_bytes = stats.udp_rx.bytes;
     let congestion = connection
         .congestion_state(path.id())
         .map(|controller| controller.metrics());
@@ -273,11 +274,10 @@ fn describe_iroh_path(connection: &Connection, path: &iroh::endpoint::PathInfo) 
     let ssthresh = congestion.as_ref().and_then(|metrics| metrics.ssthresh);
     let pacing_bps = congestion.as_ref().and_then(|metrics| metrics.pacing_rate);
     format!(
-        "id={} kind={} selected={} closed={} remote={:?} rtt_ms={:?} cwnd={:?} controller_cwnd={:?} ssthresh={:?} pacing_bps={:?} mtu={:?} lost_packets={:?} lost_bytes={:?} tx_datagrams={:?} tx_bytes={:?} rx_datagrams={:?} rx_bytes={:?}",
+        "id={} kind={} selected={} remote={:?} rtt_ms={:?} cwnd={:?} controller_cwnd={:?} ssthresh={:?} pacing_bps={:?} mtu={:?} lost_packets={:?} lost_bytes={:?} tx_datagrams={:?} tx_bytes={:?} rx_datagrams={:?} rx_bytes={:?}",
         path.id(),
         kind,
         path.is_selected(),
-        path.is_closed(),
         path.remote_addr(),
         rtt_ms,
         path_cwnd,
