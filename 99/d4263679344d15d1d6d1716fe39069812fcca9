@@ -1,0 +1,19 @@
+README.md
+  s_f4407b4c424f38::t_95fcade01af22d 10-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "99d4263679344d15d1d6d1716fe39069812fcca9",
+  "prompts": {},
+  "sessions": {
+    "s_f4407b4c424f38": {
+      "agent_id": {
+        "tool": "track-iroh-migrate",
+        "id": "pi-pocket-track-iroh-migrate",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "BlankMauser <thomasluvan@gmail.com>"
+    }
+  }
+}
