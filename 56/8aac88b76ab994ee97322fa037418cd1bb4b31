@@ -1,0 +1,20 @@
+crates/iroh-webrtc-transport/src/browser/facade.rs
+  s_f4407b4c424f38::t_860750a75e5334 230-243,517,522
+  s_f4407b4c424f38::t_6dc4bd77964411 229
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "568aac88b76ab994ee97322fa037418cd1bb4b31",
+  "prompts": {},
+  "sessions": {
+    "s_f4407b4c424f38": {
+      "agent_id": {
+        "tool": "track-iroh-migrate",
+        "id": "pi-pocket-track-iroh-migrate",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "BlankMauser <thomasluvan@gmail.com>"
+    }
+  }
+}
